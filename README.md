@@ -56,7 +56,7 @@ pip install -r requirements.txt
 python q1_kgrams.py      # K-Gram construction and Jaccard similarity
 python q2_minhash.py     # MinHash signature experiments
 python q3_lsh.py         # LSH with banding
-python q4_movielens_minhash.py   # MinHash on MovieLens (needs u.data)
-python q5_movielens_lsh.py       # LSH on MovieLens (needs u.data)
+python q4_movielens_minhash.py   # MinHash on MovieLens 
+python q5_movielens_lsh.py       # LSH on MovieLens 
 ```
 
