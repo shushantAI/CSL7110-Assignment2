@@ -1,42 +1,29 @@
-"""
-Q1: K-Gram Construction and Jaccard Similarity
-CSL7110 Assignment 2
-"""
 
 import os
 import itertools
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
-
 def load_document(filepath: str) -> str:
-    """Load and clean a document (only lowercase letters + space)."""
     with open(filepath, "r") as f:
         text = f.read().strip()
-    # Keep only lowercase letters and space
+                                           
     cleaned = "".join(ch for ch in text.lower() if ch.isalpha() or ch == " ")
     return cleaned
 
-
 def char_kgrams(text: str, k: int) -> set:
-    """Build a set of character k-grams from text."""
     return {text[i:i+k] for i in range(len(text) - k + 1)}
 
-
 def word_kgrams(text: str, k: int) -> set:
-    """Build a set of word k-grams from text."""
     words = text.split()
     return {" ".join(words[i:i+k]) for i in range(len(words) - k + 1)}
 
-
 def jaccard_similarity(set_a: set, set_b: set) -> float:
-    """Exact Jaccard similarity between two sets."""
     if not set_a and not set_b:
         return 1.0
     intersection = len(set_a & set_b)
     union = len(set_a | set_b)
     return intersection / union
-
 
 def main():
     doc_names = ["D1", "D2", "D3", "D4"]
@@ -45,7 +32,6 @@ def main():
         path = os.path.join(DATA_DIR, f"{name}.txt")
         docs[name] = load_document(path)
 
-    # ---- Construct k-grams ----
     print("=" * 65)
     print("Q1A: K-GRAM CONSTRUCTION")
     print("=" * 65)
@@ -60,11 +46,10 @@ def main():
         print(f"\n{gram_type.upper()}:")
         for name, grams in gram_sets.items():
             print(f"  {name}: {len(grams)} unique k-grams")
-        # Sample a few for illustration
+                                       
         sample = list(gram_sets["D1"])[:5]
         print(f"  Sample from D1: {sample}")
 
-    # ---- Jaccard similarities ----
     print("\n" + "=" * 65)
     print("Q1B: JACCARD SIMILARITY BETWEEN ALL PAIRS (exact)")
     print("=" * 65)
@@ -99,7 +84,6 @@ def main():
         print()
 
     return results, gram_types
-
 
 if __name__ == "__main__":
     main()

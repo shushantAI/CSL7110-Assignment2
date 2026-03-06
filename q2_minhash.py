@@ -1,7 +1,3 @@
-"""
-Q2: Min-Hashing
-CSL7110 Assignment 2
-"""
 
 import os
 import time
@@ -10,32 +6,24 @@ import numpy as np
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
-# Large prime > 10,000 for hash function modulus
-PRIME = 104729  # prime > 10,000
-
+PRIME = 104729                  
 
 def load_document(filepath: str) -> str:
     with open(filepath, "r") as f:
         text = f.read().strip()
     return "".join(ch for ch in text.lower() if ch.isalpha() or ch == " ")
 
-
 def char_kgrams(text: str, k: int) -> set:
     return {text[i:i+k] for i in range(len(text) - k + 1)}
 
-
 def build_universe(all_gram_sets: list) -> list:
-    """Build a sorted universe list from multiple k-gram sets."""
     universe = sorted(set().union(*all_gram_sets))
     return universe
-
 
 def gram_to_index(universe: list) -> dict:
     return {g: i for i, g in enumerate(universe)}
 
-
 def generate_hash_params(t: int, seed: int = 42) -> list:
-    """Generate t sets of (a, b) for hash functions h(x) = (a*x + b) % PRIME."""
     rng = random.Random(seed)
     params = []
     for _ in range(t):
@@ -44,9 +32,7 @@ def generate_hash_params(t: int, seed: int = 42) -> list:
         params.append((a, b))
     return params
 
-
 def minhash_signature(gram_set: set, universe_index: dict, hash_params: list) -> np.ndarray:
-    """Compute MinHash signature vector for a set."""
     t = len(hash_params)
     sig = np.full(t, np.inf)
     for gram in gram_set:
@@ -59,19 +45,14 @@ def minhash_signature(gram_set: set, universe_index: dict, hash_params: list) ->
                 sig[i] = h
     return sig
 
-
 def approx_jaccard(sig_a: np.ndarray, sig_b: np.ndarray) -> float:
-    """Approximate Jaccard similarity from MinHash signatures."""
     return float(np.mean(sig_a == sig_b))
-
 
 def exact_jaccard(set_a: set, set_b: set) -> float:
     u = len(set_a | set_b)
     return len(set_a & set_b) / u if u > 0 else 1.0
 
-
 def run_minhash_experiment(t_values: list, gram_sets: dict, doc_pair=("D1", "D2")):
-    """Q2A: Run minhash for multiple t values on a pair."""
     d1, d2 = doc_pair
     all_sets = list(gram_sets.values())
     universe = build_universe(all_sets)
@@ -101,9 +82,7 @@ def run_minhash_experiment(t_values: list, gram_sets: dict, doc_pair=("D1", "D2"
 
     return results, true_j
 
-
 def find_best_t(gram_sets: dict, doc_pair=("D1", "D2"), n_trials=5):
-    """Q2B: Experiment to find good t value."""
     d1, d2 = doc_pair
     all_sets = list(gram_sets.values())
     universe = build_universe(all_sets)
@@ -133,7 +112,6 @@ def find_best_t(gram_sets: dict, doc_pair=("D1", "D2"), n_trials=5):
             times.append(elapsed)
         print(f"  {t:>6} {np.mean(errors):>12.4f} {np.std(errors):>12.4f} {np.mean(times):>14.4f}")
 
-
 def main():
     doc_names = ["D1", "D2", "D3", "D4"]
     docs = {}
@@ -152,7 +130,6 @@ def main():
     print("  - Error decreases as t increases (more hash functions = better estimate)")
     print("  - t=150 offers a good balance: low error with manageable computation time")
     print("  - Beyond t=300, gains in accuracy diminish while compute cost grows linearly")
-
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,3 @@
-"""
-Q3: Locality Sensitive Hashing (LSH)
-CSL7110 Assignment 2
-"""
 
 import os
 import math
@@ -14,29 +10,23 @@ PRIME = 104729
 T_LSH = 160
 TAU = 0.7
 
-
 def load_document(filepath: str) -> str:
     with open(filepath, "r") as f:
         text = f.read().strip()
     return "".join(ch for ch in text.lower() if ch.isalpha() or ch == " ")
 
-
 def char_kgrams(text: str, k: int) -> set:
     return {text[i:i+k] for i in range(len(text) - k + 1)}
-
 
 def build_universe(all_gram_sets: list) -> list:
     return sorted(set().union(*all_gram_sets))
 
-
 def gram_to_index(universe: list) -> dict:
     return {g: i for i, g in enumerate(universe)}
-
 
 def generate_hash_params(t: int, seed: int = 42) -> list:
     rng = random.Random(seed)
     return [(rng.randint(1, PRIME - 1), rng.randint(0, PRIME - 1)) for _ in range(t)]
-
 
 def minhash_signature(gram_set: set, universe_index: dict, hash_params: list) -> np.ndarray:
     t = len(hash_params)
@@ -51,22 +41,14 @@ def minhash_signature(gram_set: set, universe_index: dict, hash_params: list) ->
                 sig[i] = h
     return sig
 
-
 def exact_jaccard(set_a: set, set_b: set) -> float:
     u = len(set_a | set_b)
     return len(set_a & set_b) / u if u > 0 else 1.0
 
-
 def scurve(s: float, b: int, r: int) -> float:
-    """LSH S-curve probability: P(candidate pair) = 1 - (1 - s^r)^b"""
     return 1.0 - (1.0 - s ** r) ** b
 
-
 def find_best_band_row(t: int, tau: float):
-    """
-    Q3A: Find (b, r) such that b*r = t and the S-curve has
-    inflection close to tau with good separation.
-    """
     print("=" * 65)
     print(f"Q3A: FINDING BEST (b, r) FOR t={t}, τ={tau}")
     print("=" * 65)
@@ -75,15 +57,14 @@ def find_best_band_row(t: int, tau: float):
     for r in range(1, t + 1):
         if t % r == 0:
             b = t // r
-            # S-curve threshold (inflection point approx at (1/b)^(1/r))
+                                                                        
             threshold = (1.0 / b) ** (1.0 / r)
-            # Probability at tau (should be high) and at tau-0.2 (should be low)
+                                                                                
             p_above = scurve(tau, b, r)
             p_below = scurve(tau - 0.2, b, r)
             separation = p_above - p_below
             candidates.append((b, r, threshold, p_above, p_below, separation))
 
-    # Sort by separation descending (best separation = sharpest curve at tau)
     candidates.sort(key=lambda x: -x[5])
 
     print(f"\n  Top candidates (sorted by separation at τ={tau}):")
@@ -93,23 +74,19 @@ def find_best_band_row(t: int, tau: float):
         b, r, thr, pa, pb, sep = row
         print(f"  {b:>6} {r:>6} {thr:>10.4f} {pa:>10.4f} {pb:>12.4f} {sep:>10.4f}")
 
-    # Best choice
     best = candidates[0]
     b_best, r_best = best[0], best[1]
     print(f"\n  ✓ Best choice: b={b_best}, r={r_best}")
     print(f"    Threshold ≈ {best[2]:.4f}, P(similarity={tau}) = {best[3]:.4f}")
     print(f"    S-curve inflects sharply around τ={tau}\n")
 
-    # Print a few S-curve values for best choice
     print(f"  S-curve f(s) for b={b_best}, r={r_best}:")
     for s in [0.3, 0.5, 0.6, 0.65, 0.7, 0.75, 0.8, 0.9]:
         print(f"    f({s:.2f}) = {scurve(s, b_best, r_best):.4f}")
 
     return b_best, r_best
 
-
 def lsh_candidate_pairs(signatures: dict, b: int, r: int) -> set:
-    """Apply LSH banding to find candidate pairs."""
     doc_names = list(signatures.keys())
     candidate_pairs = set()
     t = len(next(iter(signatures.values())))
@@ -128,10 +105,8 @@ def lsh_candidate_pairs(signatures: dict, b: int, r: int) -> set:
 
     return candidate_pairs
 
-
 def approx_jaccard(sig_a: np.ndarray, sig_b: np.ndarray) -> float:
     return float(np.mean(sig_a == sig_b))
-
 
 def main():
     doc_names = ["D1", "D2", "D3", "D4"]
@@ -142,10 +117,8 @@ def main():
     universe = build_universe(list(gram_sets.values()))
     u_index = gram_to_index(universe)
 
-    # Q3A: find best b, r
     b_best, r_best = find_best_band_row(T_LSH, TAU)
 
-    # Q3B: compute probability for each pair
     print("=" * 65)
     print("Q3B: PROBABILITY OF EACH PAIR BEING A CANDIDATE (using LSH)")
     print("=" * 65)
@@ -167,7 +140,6 @@ def main():
         predicted = "YES" if p_cand >= 0.5 else "NO"
         print(f"  {d1+'-'+d2:<12} {exact_j:>10.4f} {approx_j:>10.4f} {p_cand:>14.4f} {predicted:>10}")
 
-    # Also run actual LSH to verify
     print(f"\n  Actual LSH candidate pairs found (b={b_best}, r={r_best}):")
     cands = lsh_candidate_pairs(sigs, b_best, r_best)
     if cands:
@@ -176,7 +148,6 @@ def main():
             print(f"    {pair[0]}-{pair[1]}  (Exact J = {ej:.4f})")
     else:
         print("    No candidate pairs found above threshold.")
-
 
 if __name__ == "__main__":
     main()

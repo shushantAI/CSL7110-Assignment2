@@ -1,13 +1,3 @@
-"""
-Q4: Min-Hashing on MovieLens 100k Dataset
-CSL7110 Assignment 2
-
-Dataset: MovieLens 100k (http://www.grouplens.org/node/73)
-Place the 'u.data' file in the data/ directory before running.
-
-Format: user_id  item_id  rating  timestamp (tab-separated)
-"""
-
 import os
 import random
 import time
@@ -16,13 +6,12 @@ import itertools
 from collections import defaultdict
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-PRIME = 1000003  # large prime > 1682 (num movies)
+PRIME = 1000003
 N_TRIALS = 5
 SIMILARITY_THRESHOLD = 0.5
 
 
 def load_movielens(filepath: str) -> dict:
-    """Load MovieLens u.data; returns {user_id: set(movie_ids)}."""
     user_movies = defaultdict(set)
     with open(filepath, "r") as f:
         for line in f:
@@ -45,7 +34,6 @@ def generate_hash_params(t: int, seed: int = 42) -> list:
 
 
 def minhash_signature(movie_set: set, hash_params: list) -> np.ndarray:
-    """Compute MinHash signature for a user's movie set."""
     t = len(hash_params)
     sig = np.full(t, np.inf)
     for movie_id in movie_set:
@@ -61,7 +49,6 @@ def approx_jaccard_from_sig(sig_a: np.ndarray, sig_b: np.ndarray) -> float:
 
 
 def compute_exact_similar_pairs(user_movies: dict, threshold: float) -> set:
-    """Brute-force exact Jaccard for all pairs (slow for large datasets)."""
     users = sorted(user_movies.keys())
     similar_pairs = set()
     total = len(users) * (len(users) - 1) // 2
@@ -79,22 +66,17 @@ def compute_exact_similar_pairs(user_movies: dict, threshold: float) -> set:
 
 def minhash_experiment(user_movies: dict, t: int, exact_pairs: set,
                        threshold: float, seed: int = 42):
-    """Run one minhash trial; return (fp_count, fn_count)."""
     users = sorted(user_movies.keys())
     hash_params = generate_hash_params(t, seed=seed)
-
-    # Compute signatures
     sigs = {u: minhash_signature(user_movies[u], hash_params) for u in users}
-
-    # Find approximate similar pairs
     approx_pairs = set()
     for u1, u2 in itertools.combinations(users, 2):
         aj = approx_jaccard_from_sig(sigs[u1], sigs[u2])
         if aj >= threshold:
             approx_pairs.add((u1, u2))
 
-    fp = len(approx_pairs - exact_pairs)  # found but shouldn't be
-    fn = len(exact_pairs - approx_pairs)  # missed
+    fp = len(approx_pairs - exact_pairs)
+    fn = len(exact_pairs - approx_pairs)
 
     return fp, fn, len(approx_pairs)
 
@@ -116,20 +98,21 @@ def main():
     print("Q4: MIN-HASHING ON MOVIELENS DATASET")
     print("=" * 65)
 
-    # Load data
     start = time.time()
     user_movies = load_movielens(data_path)
     print(f"\n  Loaded {len(user_movies)} users, data read in {time.time()-start:.2f}s")
 
-    # Exact Jaccard
     print(f"\n  Step 1: Exact Jaccard Similarity (threshold={SIMILARITY_THRESHOLD})")
     exact_pairs = compute_exact_similar_pairs(user_movies, SIMILARITY_THRESHOLD)
     print(f"  Exact similar pairs (J >= {SIMILARITY_THRESHOLD}): {len(exact_pairs)}")
     if exact_pairs:
-        sample = list(exact_pairs)[:5]
-        print(f"  Sample pairs: {sample}")
+        print(f"\n  ALL pairs with J >= {SIMILARITY_THRESHOLD}:")
+        print(f"  {'User A':>8} {'User B':>8} {'Jaccard':>10}")
+        print(f"  {'-'*30}")
+        for u1, u2 in sorted(exact_pairs):
+            j = exact_jaccard(user_movies[u1], user_movies[u2])
+            print(f"  {u1:>8} {u2:>8} {j:>10.4f}")
 
-    # MinHash experiments
     t_values = [50, 100, 200]
     print(f"\n  Step 2: MinHash Approximation ({N_TRIALS} runs each)\n")
     print(f"  {'t':>6} {'Avg FP':>10} {'Avg FN':>10} {'Avg Pairs':>12} {'Time(s)':>10}")
